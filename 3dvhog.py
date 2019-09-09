@@ -1,5 +1,7 @@
 import numpy as np
 import math
+import scipy
+import scipy.ndimage
 
 def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram_bins, step_size=block_size):
 
@@ -40,6 +42,36 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 		y_block_positions = y_block_positions[:-1]
 	if (z_block_positions[-1] > (sz -(cell_size * block*size)):
 		z_block_positions = z_block_positions[:-1]
+
+	#Number of blocks
+	num_x_blocks = len(x_block_positions)
+	num_y_blocks = len(y_block_positions)
+	num_z_blocks = len(z_block_positions)
+
+	#Create 3D gradient vectors
+	#X filter and vector
+	x_filter = np.zeros((3,3,3))
+	x_filter[0,1,1], x_filter[2,1,1] = 1, -1
+	x_vector = scipy.ndimage.convolve(vox_volume, x_filter, mode='constant')
+
+        #Y filter and vector
+        y_filter = np.zeros((3,3,3))
+        y_filter[1,0,0], y_filter[1,2,0] = 1, -1
+        y_vector = scipy.ndimage.convolve(vox_volume, y_filter, mode='constant')
+
+	#Z filter and vector
+        z_filter = np.zeros((3,3,3))
+        z_filter[1,1,0], z_filter[1,1,2] = 1, -1
+        z_vector = scipy.ndimage.convolve(vox_volume, z_filter, mode='constant')
+
+	magnitudes = np.linalg.norm(x_vector) + np.linalg.norm(y_vector) + np.linalg.norm(z_vector)
+
+	#Voxel Weights
+	kernel_size = 3
+	voxel_filter = np.full((kernel_size, kernel_size, kernel_size), 1 / (kernel_size * kernel_size * kernel_size))
+	weights = scipy.ndimage.convolve(vox_volume, voxel_filter, mode='constant')
+	weights = weights + 1
+	
 
 	
 
