@@ -13,7 +13,7 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 	block_size : size of a 3d block defined in cells
 	theta_histogram_bins : number of bins to break the angles in the xy plane - 180 degrees
 	phi_histogram_bins : number of bins to break the angles in the xz plane - 360 degrees
-	step_size : OPTIONAL integer defining the number of cells the blcoks should overlap by. If same/larger than block size, blocks will not overlap
+	step_size : OPTIONAL integer defining the number of cells the blcoks should overlap by. 
 	"""
 
 	c = cell_size
@@ -36,11 +36,11 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 	z_block_positions = z_cell_positions[0 : num_z_cells : block_size]
 
 	#Check if last block in each dimension has enough voxels to be a full block
-	if (x_block_positions[-1] > (sx -(cell_size * block*size)):
+	if (x_block_positions[-1] > (sx -(cell_size * block_size)):
 		x_block_positions = x_block_positions[:-1]
-	if (y_block_positions[-1] > (sy -(cell_size * block*size)):
+	if (y_block_positions[-1] > (sy -(cell_size * block_size)):
 		y_block_positions = y_block_positions[:-1]
-	if (z_block_positions[-1] > (sz -(cell_size * block*size)):
+	if (z_block_positions[-1] > (sz -(cell_size * block_size)):
 		z_block_positions = z_block_positions[:-1]
 
 	#Number of blocks
@@ -71,7 +71,33 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 	voxel_filter = np.full((kernel_size, kernel_size, kernel_size), 1 / (kernel_size * kernel_size * kernel_size))
 	weights = scipy.ndimage.convolve(vox_volume, voxel_filter, mode='constant')
 	weights = weights + 1
+
+	#Gradient vector
+	grad_vector = np.zeros((sx, sy, sz, 3))
+	for i in range(sx):
+		for j in range(sy):
+			for k in range(sz):
+				grad_vector[i,j,k,0] = x_vector[i,j,k]
+				grad_vector[i,j,k,1] = y_vector[i,j,k]
+				grad_vector[i,j,k,2] = z_vector[i,j,k]
+
+	theta = math.acos(grad_vector[:::2])
+	if theta == 0: theta = np.finfo(float).eps #epsilon to make sure that theta falls into a bin
 	
+	phi = math.atan2(grad_vector[:::1], grad_vector[:::0])
+	phi = phi + math.pi
+
+	#Binning
+	b_size_voxels = c * b
+	t_hist_bins = math.pi / theta_histogram_bins
+	p_hist_bins = (2*math.pi) / phi_histogram_bins
+
+	 
+	error_count = 0
+	for i in range(num_blocks):
+		print("Processing block: {:d} of {:d}".format(i+1, num_blocks))
+		feature = np.zeros((b * b * b, theta_histogram_bins*phi_histogram_bins))
+		
 
 	
 
