@@ -1,7 +1,6 @@
 import numpy as np
 import math
-import scipy
-import scipy.ndimage
+from scipy.ndimage import convolve
 
 def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram_bins, step_size=None):
 
@@ -55,24 +54,24 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 	#X filter and vector
 	x_filter = np.zeros((3,3,3))
 	x_filter[0,1,1], x_filter[2,1,1] = 1, -1
-	x_vector = scipy.ndimage.convolve(vox_volume, x_filter, mode='constant')
+	x_vector = convolve(vox_volume,x_filter, mode='constant', cval=0)
 
         #Y filter and vector
 	y_filter = np.zeros((3,3,3))
 	y_filter[1,0,0], y_filter[1,2,0] = 1, -1
-	y_vector = scipy.ndimage.convolve(vox_volume, y_filter, mode='constant')
+	y_vector = convolve(vox_volume,y_filter, mode='constant', cval=0)
 
 	#Z filter and vector
 	z_filter = np.zeros((3,3,3))
 	z_filter[1,1,0], z_filter[1,1,2] = 1, -1
-	z_vector = scipy.ndimage.convolve(vox_volume, z_filter, mode='constant')
+	z_vector = convolve(vox_volume,z_filter, mode='constant', cval=0)
 
 	magnitudes = np.linalg.norm(x_vector) + np.linalg.norm(y_vector) + np.linalg.norm(z_vector)
 
 	#Voxel Weights
 	kernel_size = 3
 	voxel_filter = np.full((kernel_size, kernel_size, kernel_size), 1 / (kernel_size * kernel_size * kernel_size))
-	weights = scipy.ndimage.convolve(vox_volume, voxel_filter, mode='constant')
+	weights = convolve(vox_volume,voxel_filter, mode='constant', cval=0 )
 	weights = weights + 1
 
 	#Gradient vector
@@ -83,8 +82,8 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 				grad_vector[i,j,k,0] = x_vector[i,j,k]
 				grad_vector[i,j,k,1] = y_vector[i,j,k]
 				grad_vector[i,j,k,2] = z_vector[i,j,k]
-
-	'''
+	
+	'''	
 	theta = math.acos(grad_vector[])
 	if theta == 0: theta = np.finfo(float).eps #epsilon to make sure that theta falls into a bin
 
@@ -101,6 +100,6 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 		print("Processing block: {:d} of {:d}".format(i+1, num_blocks))
 		feature = np.zeros((b * b * b, theta_histogram_bins*phi_histogram_bins))
 		full_empty = vox_volume()
-	'''	
+	'''
 
 	return grad_vector

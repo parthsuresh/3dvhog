@@ -5,6 +5,9 @@ import scipy.ndimage
 
 from vhog3d import hog3d
 
+import pdb
+pdb.set_trace()
+
 if __name__ == "__main__":
 	
 	# Test 1
@@ -13,7 +16,8 @@ if __name__ == "__main__":
 	block_size = 3
 	theta_histogram_bins = 5
 	phi_histogram_bins = 5
-	print("Test 1 : ", hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram_bins))
+	grad_vec = hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram_bins)
+	print("Test 1 : ", grad_vec)
 
 
 	# Test 2
@@ -22,6 +26,7 @@ if __name__ == "__main__":
 	block_size = 3
 	theta_histogram_bins = 5
 	phi_histogram_bins = 5
-	print("Test 2 : ", hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram_bins))
+	grad_vec = hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram_bins)
+	print("Test 2 : ", grad_vec)
 
 	
