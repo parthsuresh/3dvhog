@@ -71,7 +71,7 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 	#Voxel Weights
 	kernel_size = 3
 	voxel_filter = np.full((kernel_size, kernel_size, kernel_size), 1 / (kernel_size * kernel_size * kernel_size))
-	weights = convolve(vox_volume,voxel_filter, mode='constant', cval=0 )
+	weights = convolve(vox_volume,voxel_filter, mode='constant', cval=0)
 	weights = weights + 1
 
 	#Gradient vector
@@ -83,23 +83,28 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 				grad_vector[i,j,k,1] = y_vector[i,j,k]
 				grad_vector[i,j,k,2] = z_vector[i,j,k]
 	
-	'''	
-	theta = math.acos(grad_vector[])
-	if theta == 0: theta = np.finfo(float).eps #epsilon to make sure that theta falls into a bin
-
-	phi = math.atan2(grad_vector[:::1], grad_vector[:::0])
-	phi = phi + math.pi
-
+	theta = np.zeros((sx,sy,sz))
+	phi = np.zeros((sx,sy,sz))
+	for i in range(sx):
+		for j in range(sy):
+			for k in range(sz):
+				theta[i,j,k] = math.acos(grad_vector[i,j,k,2])
+				phi[i,j,k] = math.atan2(grad_vector[i,j,k,1], grad_vector[i,j,k,0])
+				print(phi[i,j,k])
+				phi[i,j,k] +=  math.pi
+	
 	#Binning
 	b_size_voxels = c * b
 	t_hist_bins = math.pi / theta_histogram_bins
 	p_hist_bins = (2*math.pi) / phi_histogram_bins
-	 
+
+	'''
+	
 	error_count = 0
 	for i in range(num_blocks):
 		print("Processing block: {:d} of {:d}".format(i+1, num_blocks))
 		feature = np.zeros((b * b * b, theta_histogram_bins*phi_histogram_bins))
 		full_empty = vox_volume()
+		
 	'''
-
-	return grad_vector
+	return grad_vector, theta, phi
