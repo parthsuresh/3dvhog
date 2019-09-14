@@ -16,7 +16,7 @@ if __name__ == "__main__":
 	block_size = 3
 	theta_histogram_bins = 5
 	phi_histogram_bins = 5
-	grad_vector,theta, phi = hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram_bins)
+	grad_vector,theta, phi, block_inds = hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram_bins)
 	print("Test 1 : ", theta)
 
 
