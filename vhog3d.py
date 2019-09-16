@@ -101,9 +101,9 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 
 	block_inds = np.zeros((num_x_blocks*num_y_blocks*num_z_blocks, 3))
 	i = 0
-	for x_block in range(num_x_blocks):
+	for z_block in range(num_z_blocks):
 		for y_block in range(num_y_blocks):
-			for z_block in range(num_z_blocks):
+			for x_block in range(num_x_blocks):
 				block_inds[i] = np.array([x_block_positions[x_block], y_block_positions[y_block], z_block_positions[z_block]])
 				i += 1
 	print(block_inds)
