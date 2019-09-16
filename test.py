@@ -11,7 +11,7 @@ pdb.set_trace()
 if __name__ == "__main__":
 	
 	# Test 1
-	vox_volume = np.full((3,3,3),0.5)
+	vox_volume = np.full((27,27,27),0.5)
 	cell_size = 3
 	block_size = 3
 	theta_histogram_bins = 5

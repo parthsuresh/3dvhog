@@ -28,22 +28,23 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 	num_z_cells = math.floor(sz / cell_size)
 
 	#Get cell positions
-	x_cell_positions = np.linspace(0, (num_x_cells*cell_size), num_x_cells)
-	y_cell_positions = np.linspace(0, (num_y_cells*cell_size), num_y_cells)
-	z_cell_positions = np.linspace(0, (num_z_cells*cell_size), num_z_cells) 
+	x_cell_positions = np.array(list(range(0,(num_x_cells*cell_size),cell_size)))
+	y_cell_positions = np.array(list(range(0,(num_y_cells*cell_size),cell_size)))
+	z_cell_positions = np.array(list(range(0,(num_z_cells*cell_size),cell_size))) 
 
 	#Get block positions
 	x_block_positions = x_cell_positions[0 : num_x_cells : block_size]
 	y_block_positions = y_cell_positions[0 : num_y_cells : block_size]
 	z_block_positions = z_cell_positions[0 : num_z_cells : block_size]
 
+
 	#Check if last block in each dimension has enough voxels to be a full block. If not, discard it.
-	if (x_block_positions[-1] > (sx -(cell_size * block_size))):
-		x_block_positions = x_block_positions[:-1]
-	if (y_block_positions[-1] > (sy -(cell_size * block_size))):
-		y_block_positions = y_block_positions[:-1]
-	if (z_block_positions[-1] > (sz -(cell_size * block_size))):
-		z_block_positions = z_block_positions[:-1]
+	if (x_block_positions[-1] > ((sx+1) -(cell_size * block_size))):
+		x_block_positions = x_block_positions[:-2]
+	if (y_block_positions[-1] > ((sy+1) -(cell_size * block_size))):
+		y_block_positions = y_block_positions[:-2]
+	if (z_block_positions[-1] > ((sz+1) -(cell_size * block_size))):
+		z_block_positions = z_block_positions[:-2]
 
 	#Number of blocks
 	num_x_blocks = len(x_block_positions)
@@ -97,6 +98,7 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 	t_hist_bins = math.pi / theta_histogram_bins
 	p_hist_bins = (2*math.pi) / phi_histogram_bins
 
+
 	block_inds = np.zeros((num_x_blocks*num_y_blocks*num_z_blocks, 3))
 	i = 0
 	for x_block in range(num_x_blocks):
@@ -104,7 +106,7 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 			for z_block in range(num_z_blocks):
 				block_inds[i] = np.array([x_block_positions[x_block], y_block_positions[y_block], z_block_positions[z_block]])
 				i += 1
-				print(block_inds[i-1])
+	print(block_inds)
 	'''
 	error_count = 0
 	for i in range(num_blocks):
