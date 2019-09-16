@@ -33,9 +33,9 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 	z_cell_positions = np.array(list(range(0,(num_z_cells*cell_size),cell_size))) 
 
 	#Get block positions
-	x_block_positions = x_cell_positions[0 : num_x_cells : block_size]
-	y_block_positions = y_cell_positions[0 : num_y_cells : block_size]
-	z_block_positions = z_cell_positions[0 : num_z_cells : block_size]
+	x_block_positions = (x_cell_positions[0 : num_x_cells : block_size])
+	y_block_positions = (y_cell_positions[0 : num_y_cells : block_size])
+	z_block_positions = (z_cell_positions[0 : num_z_cells : block_size])
 
 
 	#Check if last block in each dimension has enough voxels to be a full block. If not, discard it.
@@ -67,7 +67,11 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 	z_filter[1,1,0], z_filter[1,1,2] = 1, -1
 	z_vector = convolve(vox_volume,z_filter, mode='constant', cval=0)
 
-	magnitudes = np.linalg.norm(x_vector) + np.linalg.norm(y_vector) + np.linalg.norm(z_vector)
+	magnitudes = np.zeros([sx,sy,sz])
+	for i in range(sx):
+		for j in range(sy):
+			for k in range(sz):
+				magnitudes[i,j,k] = (x_vector[i,j,k]**2 + y_vector[i,j,k]**2 + z_vector[i,j,k]**2)**(0.5)
 
 	#Voxel Weights
 	kernel_size = 3
@@ -94,7 +98,7 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 				phi[i,j,k] +=  math.pi
 	
 	#Binning
-	b_size_voxels = c * b
+	b_size_voxels = int(c * b)
 	t_hist_bins = math.pi / theta_histogram_bins
 	p_hist_bins = (2*math.pi) / phi_histogram_bins
 
@@ -106,13 +110,36 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 			for x_block in range(num_x_blocks):
 				block_inds[i] = np.array([x_block_positions[x_block], y_block_positions[y_block], z_block_positions[z_block]])
 				i += 1
-	print(block_inds)
-	'''
+
+	num_blocks = len(block_inds)
 	error_count = 0
-	for i in range(num_blocks):
+	for i in range(1):
 		print("Processing block: {:d} of {:d}".format(i+1, num_blocks))
 		feature = np.zeros((b * b * b, theta_histogram_bins*phi_histogram_bins))
-		full_empty = vox_volume()
-	'''	
-	
-	return grad_vector, theta, phi, block_inds
+		full_empty = vox_volume[int(block_inds[i,0]):int(block_inds[i,0]+b_size_voxels),int(block_inds[i,1]):int(block_inds[i,1]+b_size_voxels),int(block_inds[i,2]):int(block_inds[i,2]+b_size_voxels)]
+		
+		if np.sum(full_empty) != 0 and np.sum(full_empty) != full_empty.size:
+			feature = np.zeros((b, b, b, theta_histogram_bins, phi_histogram_bins))
+			t_weights = weights[int(block_inds[i,0]):int(block_inds[i,0]+b_size_voxels), int(block_inds[i,1]):int(block_inds[i,1]+b_size_voxels),int(block_inds[i,2]):int(block_inds[i,2]+b_size_voxels)]
+			t_magnitudes =  magnitudes[int(block_inds[i,0]):int(block_inds[i,0]+b_size_voxels), int(block_inds[i,1]):int(block_inds[i,1]+b_size_voxels), int(block_inds[i,2]):int(block_inds[i,2]+b_size_voxels)]
+			t_theta =  theta[int(block_inds[i,0]):int(block_inds[i,0]+b_size_voxels), int(block_inds[i,1]):int(block_inds[i,1]+b_size_voxels), int(block_inds[i,2]):int(block_inds[i,2]+b_size_voxels)]
+			t_phi =  phi[int(block_inds[i,0]):int(block_inds[i,0]+b_size_voxels), int(block_inds[i,1]):int(block_inds[i,1]+b_size_voxels), int(block_inds[i,2]):int(block_inds[i,2]+b_size_voxels)]
+
+		for l in range(b_size_voxels):
+			for m in range(b_size_voxels):
+				for n in range(b_size_voxels):
+					cell_pos_x = math.ceil(l / c)
+					cell_pos_y = math.ceil(m / c)
+					cell_pos_z = math.ceil(n / c)
+
+					hist_pos_theta = math.ceil(t_theta[l,m,n]/t_hist_bins)
+					hist_pos_phi = math.ceil(t_phi[l,m,n]/p_hist_bins)
+
+					if hist_pos_phi <= phi_histogram_bins and hist_pos_theta <= theta_histogram_bins and hist_pos_phi > 0 and hist_pos_theta > 0:
+						feature[cell_pos_x, cell_pos_y, cell_pos_z, hist_pos_theta, hist_pos_phi] += (t_magnitudes[l,m,n] * t_weights[l,m,n])
+					else:
+						error_count += 1
+
+		feature = np.reshape(feature, ((b*b*b), theta_histogram_bins, phi_histogram_bins))
+
+
