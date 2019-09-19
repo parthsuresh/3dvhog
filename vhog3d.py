@@ -12,7 +12,7 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 	block_size : size of a 3d block defined in cells
 	theta_histogram_bins : number of bins to break the angles in the xy plane - 180 degrees
 	phi_histogram_bins : number of bins to break the angles in the xz plane - 360 degrees
-	step_size : OPTIONAL integer defining the number of cells the blcoks should overlap by. 
+	step_size : OPTIONAL integer defining the number of cells the blocks should overlap by. 
 	"""
 
 	if step_size is None:
@@ -113,7 +113,8 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 
 	num_blocks = len(block_inds)
 	error_count = 0
-	for i in range(1):
+	features = []
+	for i in range(num_blocks):
 		print("Processing block: {:d} of {:d}".format(i+1, num_blocks))
 		feature = np.zeros((b * b * b, theta_histogram_bins*phi_histogram_bins))
 		full_empty = vox_volume[int(block_inds[i,0]):int(block_inds[i,0]+b_size_voxels),int(block_inds[i,1]):int(block_inds[i,1]+b_size_voxels),int(block_inds[i,2]):int(block_inds[i,2]+b_size_voxels)]
@@ -125,21 +126,31 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
 			t_theta =  theta[int(block_inds[i,0]):int(block_inds[i,0]+b_size_voxels), int(block_inds[i,1]):int(block_inds[i,1]+b_size_voxels), int(block_inds[i,2]):int(block_inds[i,2]+b_size_voxels)]
 			t_phi =  phi[int(block_inds[i,0]):int(block_inds[i,0]+b_size_voxels), int(block_inds[i,1]):int(block_inds[i,1]+b_size_voxels), int(block_inds[i,2]):int(block_inds[i,2]+b_size_voxels)]
 
-		for l in range(b_size_voxels):
-			for m in range(b_size_voxels):
-				for n in range(b_size_voxels):
-					cell_pos_x = math.ceil(l / c)
-					cell_pos_y = math.ceil(m / c)
-					cell_pos_z = math.ceil(n / c)
+			for l in range(b_size_voxels):
+				for m in range(b_size_voxels):
+					for n in range(b_size_voxels):
+						cell_pos_x = math.ceil(l / c) - 1
+						cell_pos_y = math.ceil(m / c) - 1
+						cell_pos_z = math.ceil(n / c) - 1
 
-					hist_pos_theta = math.ceil(t_theta[l,m,n]/t_hist_bins)
-					hist_pos_phi = math.ceil(t_phi[l,m,n]/p_hist_bins)
+						hist_pos_theta = math.ceil(t_theta[l,m,n]/t_hist_bins) - 1 
+						hist_pos_phi = math.ceil(t_phi[l,m,n]/p_hist_bins) - 1
 
-					if hist_pos_phi <= phi_histogram_bins and hist_pos_theta <= theta_histogram_bins and hist_pos_phi > 0 and hist_pos_theta > 0:
-						feature[cell_pos_x, cell_pos_y, cell_pos_z, hist_pos_theta, hist_pos_phi] += (t_magnitudes[l,m,n] * t_weights[l,m,n])
-					else:
-						error_count += 1
+						if hist_pos_phi <= phi_histogram_bins and hist_pos_theta <= theta_histogram_bins and hist_pos_phi > 0 and hist_pos_theta > 0:
+							feature[cell_pos_x, cell_pos_y, cell_pos_z, hist_pos_theta, hist_pos_phi] += (t_magnitudes[l,m,n] * t_weights[l,m,n])
+						else:
+							error_count += 1
 
-		feature = np.reshape(feature, ((b*b*b), theta_histogram_bins, phi_histogram_bins))
+			feature = np.reshape(feature, ((b*b*b), theta_histogram_bins, phi_histogram_bins))
+			l2 = np.linalg.norm(feature)
+			if l2 != 0:
+				norm_feature = feature / np.linalg.norm(feature)
+			else:
+				norm_feature = feature
+			norm_feature = np.reshape(norm_feature, ((b*b*b), (theta_histogram_bins*phi_histogram_bins)))
 
+			features.append(norm_feature)
 
+	print(norm_feature.shape)
+
+	return features
