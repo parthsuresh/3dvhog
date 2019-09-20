@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from scipy.ndimage import convolve
+from tqdm import tqdm
 
 
 def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram_bins, step_size=None):
@@ -115,7 +116,6 @@ def hog3d(vox_volume, cell_size, block_size, theta_histogram_bins, phi_histogram
     error_count = 0
     features = []
     for i in range(num_blocks):
-        print("Processing block: {:d} of {:d}".format(i + 1, num_blocks))
         full_empty = vox_volume[int(block_inds[i, 0]):int(block_inds[i, 0] + b_size_voxels),
                      int(block_inds[i, 1]):int(block_inds[i, 1] + b_size_voxels),
                      int(block_inds[i, 2]):int(block_inds[i, 2] + b_size_voxels)]
